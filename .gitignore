@@ -17,6 +17,10 @@
 /.next/
 /out/
 
+# vendored model — NOT committed (exceeds GitHub's 100MB/file limit).
+# Fetched at build time by scripts/fetch-model.mjs (see package.json "build").
+/models
+
 # production
 /build
 

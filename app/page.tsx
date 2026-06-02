@@ -1,65 +1,99 @@
-import Image from "next/image";
+"use client";
+// app/page.tsx — assembles the two calm states (Composer → Reading), cross-faded.
+// Fires the warm-up on first paint so the model loads while the user reads/types
+// (PLAN §3.3, §4.4, §11 steps 3/5/6/7). Arc, Vibe, and Output land in later steps.
+import { useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useResonanceStore } from "@/store/useResonanceStore";
+import { Wordmark } from "@/components/Wordmark";
+import { EngineBadge } from "@/components/EngineBadge";
+import { Composer } from "@/components/Composer";
+import { AmbientGlow } from "@/components/AmbientGlow";
+import { MoodHero } from "@/components/MoodHero";
+import { Spectrum } from "@/components/Spectrum";
+import { Telemetry } from "@/components/Telemetry";
+import { EmotionArc } from "@/components/EmotionArc";
+import { Vibe } from "@/components/Vibe";
+import { ActionBar } from "@/components/ActionBar";
+import { Toast } from "@/components/Toast";
 
-export default function Home() {
+const ease = [0.22, 1, 0.36, 1] as const;
+
+export default function Page() {
+  const warm = useResonanceStore((s) => s.warm);
+  const result = useResonanceStore((s) => s.result);
+  const status = useResonanceStore((s) => s.status);
+  const loadFromUrl = useResonanceStore((s) => s.loadFromUrl);
+
+  // Warm the engine quietly on first paint, then restore any permalink (PLAN §4.4/§7.5).
+  useEffect(() => {
+    warm();
+    loadFromUrl();
+  }, [warm, loadFromUrl]);
+
+  const reading = Boolean(result) && status !== "idle";
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="relative mx-auto flex min-h-screen max-w-5xl flex-col px-5 py-8 sm:px-8 sm:py-10">
+      <AmbientGlow />
+
+      {/* Top bar: brand + always-visible engine proof */}
+      <header className="flex items-start justify-between gap-4">
+        <Wordmark />
+        <div className="pt-2">
+          <EngineBadge />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </header>
+
+      <div className="flex flex-1 flex-col justify-center py-10">
+        <AnimatePresence mode="wait">
+          {!reading ? (
+            <motion.div
+              key="composer"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.6, ease }}
+              className="mx-auto w-full max-w-2xl"
+            >
+              <Composer />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="reading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6, ease }}
+              className="flex w-full flex-col gap-12"
+            >
+              {/* slim editable strip up top */}
+              <Composer compact />
+
+              {/* the result blooms below */}
+              <MoodHero />
+
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-[1.4fr_1fr]">
+                <Spectrum />
+                <Telemetry />
+              </div>
+
+              <EmotionArc />
+              <Vibe />
+              <ActionBar />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <Toast />
+
+      <footer className="pt-6 text-center">
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-mist-500">
+          Built with Next.js · transformers.js · ONNX — no AI API. Portfolio
+          Project B1.
+        </p>
+      </footer>
+    </main>
   );
 }
