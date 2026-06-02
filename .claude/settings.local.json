@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(curl -sI --max-time 8 https://huggingface.co)",
+      "Bash(mkdir -p /tmp/resonance-docs)",
+      "Bash(mv PLAN.md PRODUCT.md /tmp/resonance-docs/)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "code-review-graph"
+  ]
+}
