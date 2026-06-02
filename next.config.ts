@@ -11,10 +11,21 @@ const nextConfig: NextConfig = {
   // Don't bundle/transpile the inference lib + its onnxruntime binaries.
   serverExternalPackages: ["@huggingface/transformers", "onnxruntime-node"],
 
-  // Ensure the vendored model ships in the lambdas that actually load it.
+  // Ensure the lambdas that load the model ship (a) the vendored model and (b) the
+  // onnxruntime-node NATIVE shared library. The .node addon is traced automatically (it's
+  // required from JS), but it loads `libonnxruntime.so.1` via dlopen at runtime — which
+  // Next's static tracer can't see, so we include the linux/x64 binary dir explicitly.
+  // Without this, prod dies with: "libonnxruntime.so.1: cannot open shared object file".
+  // We trace only linux/x64 (Vercel's runtime, ~34MB) — not all platforms (~210MB).
   outputFileTracingIncludes: {
-    "/api/analyze": ["./models/**/*"],
-    "/api/analyze/warm": ["./models/**/*"],
+    "/api/analyze": [
+      "./models/**/*",
+      "./node_modules/onnxruntime-node/bin/**/linux/x64/*",
+    ],
+    "/api/analyze/warm": [
+      "./models/**/*",
+      "./node_modules/onnxruntime-node/bin/**/linux/x64/*",
+    ],
   },
 };
 
