@@ -55,7 +55,12 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("[analyze] pipeline load failed:", err);
     return NextResponse.json(
-      { error: "The engine couldn't start — try again in a moment." },
+      {
+        error: "The engine couldn't start — try again in a moment.",
+        // TEMP diagnostic — remove once the Vercel 500 is resolved.
+        stage: "load",
+        detail: errDetail(err),
+      },
       { status: 503 },
     );
   }
@@ -121,7 +126,12 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("[analyze] inference failed:", err);
     return NextResponse.json(
-      { error: "The engine couldn't read that — try again." },
+      {
+        error: "The engine couldn't read that — try again.",
+        // TEMP diagnostic — remove once the Vercel 500 is resolved.
+        stage: "inference",
+        detail: errDetail(err),
+      },
       { status: 500 },
     );
   }
@@ -131,4 +141,16 @@ function globalThisHasPipe(): boolean {
   return Boolean(
     (globalThis as unknown as { __resonancePipe?: unknown }).__resonancePipe,
   );
+}
+
+// TEMP — surface the real error so we can diagnose the production 500. Remove after.
+function errDetail(err: unknown): string {
+  if (err instanceof Error) {
+    return `${err.name}: ${err.message}`.slice(0, 600);
+  }
+  try {
+    return String(err).slice(0, 600);
+  } catch {
+    return "unknown";
+  }
 }
