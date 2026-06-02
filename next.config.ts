@@ -27,6 +27,28 @@ const nextConfig: NextConfig = {
       "./node_modules/onnxruntime-node/bin/**/linux/x64/*",
     ],
   },
+
+  // The analyze lambdas carry a 120MB model + the 34MB onnxruntime native lib, so the
+  // 250MB unzipped function limit is tight. `sharp` (Next's image optimizer) and the
+  // non-linux onnxruntime binaries get traced in by default but are NEVER used at
+  // runtime here (no next/image in an API route; Vercel runs linux/x64). Exclude them
+  // to stay under the limit.
+  outputFileTracingExcludes: {
+    "/api/analyze": [
+      "./node_modules/@img/**",
+      "./node_modules/sharp/**",
+      "./node_modules/onnxruntime-node/bin/**/darwin/**",
+      "./node_modules/onnxruntime-node/bin/**/win32/**",
+      "./node_modules/onnxruntime-node/bin/**/linux/arm64/**",
+    ],
+    "/api/analyze/warm": [
+      "./node_modules/@img/**",
+      "./node_modules/sharp/**",
+      "./node_modules/onnxruntime-node/bin/**/darwin/**",
+      "./node_modules/onnxruntime-node/bin/**/win32/**",
+      "./node_modules/onnxruntime-node/bin/**/linux/arm64/**",
+    ],
+  },
 };
 
 export default nextConfig;
