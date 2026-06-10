@@ -1,8 +1,14 @@
 # Resonance
 
-> **Read the feeling in your words.** A real transformer model runs inside our own
-> serverless function — no third-party API, no API key, zero per-request cost — and its
-> output literally paints the interface.
+> Text → emotion spectrum from a real transformer running server-side. No AI API. Next.js + transformers.js + ONNX.
+
+**[Live demo](https://resonance-lac-sigma.vercel.app)** · part of [my portfolio](https://portfolio-delta-snowy-rw5w2y5pf8.vercel.app)
+
+![Resonance](docs/poster.jpg)
+
+**Read the feeling in your words.** A real transformer model runs inside our own
+serverless function — no third-party API, no API key, zero per-request cost — and its
+output literally paints the interface.
 
 Resonance reads the emotion in a piece of text on its *own* server (via
 [`@huggingface/transformers`](https://github.com/huggingface/transformers.js), ONNX in
